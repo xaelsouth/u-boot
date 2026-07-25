@@ -275,6 +275,7 @@ static int ehci_usb_remove(struct udevice *dev)
 }
 
 static const struct udevice_id mxs_usb_ids[] = {
+	{ .compatible = "fsl,imx23-usb" },
 	{ .compatible = "fsl,imx28-usb" },
 	{ }
 };
