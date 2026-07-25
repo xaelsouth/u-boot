@@ -114,7 +114,7 @@ static uint32_t mxs_get_gpmiclk(void)
 		(struct mxs_clkctrl_regs *)MXS_CLKCTRL_BASE;
 #if defined(CONFIG_MX23)
 	uint8_t *reg =
-		&clkctrl_regs->hw_clkctrl_frac0[CLKCTRL_FRAC0_CPU];
+		&clkctrl_regs->hw_clkctrl_frac0[CLKCTRL_FRAC0_IO0];
 #elif defined(CONFIG_MX28)
 	uint8_t *reg =
 		&clkctrl_regs->hw_clkctrl_frac1[CLKCTRL_FRAC1_GPMI];
@@ -128,14 +128,33 @@ static uint32_t mxs_get_gpmiclk(void)
 	/* XTAL Path */
 	if (clkseq & CLKCTRL_CLKSEQ_BYPASS_GPMI) {
 		div = clkctrl & CLKCTRL_GPMI_DIV_MASK;
-		return XTAL_FREQ_MHZ / div;
+		return XTAL_FREQ_KHZ / div;
 	}
 
 	/* REF Path */
 	clkfrac = readb(reg);
 	frac = clkfrac & CLKCTRL_FRAC_FRAC_MASK;
 	div = clkctrl & CLKCTRL_GPMI_DIV_MASK;
-	return (PLL_FREQ_MHZ * PLL_FREQ_COEF / frac) / div;
+	return (PLL_FREQ_KHZ * PLL_FREQ_COEF / frac) / div;
+}
+
+static uint32_t mxs_get_ref_gpmiclk(void)
+{
+	struct mxs_clkctrl_regs *clkctrl_regs =
+		(struct mxs_clkctrl_regs *)MXS_CLKCTRL_BASE;
+#if defined(CONFIG_MX23)
+	uint8_t *reg =
+		&clkctrl_regs->hw_clkctrl_frac0[CLKCTRL_FRAC0_IO0];
+#elif defined(CONFIG_MX28)
+	uint8_t *reg =
+		&clkctrl_regs->hw_clkctrl_frac1[CLKCTRL_FRAC1_GPMI];
+#endif
+	uint8_t clkfrac, frac;
+
+	/* REF Path */
+	clkfrac = readb(reg);
+	frac = clkfrac & CLKCTRL_FRAC_FRAC_MASK;
+	return (PLL_FREQ_KHZ * PLL_FREQ_COEF / frac);
 }
 
 /*
@@ -401,13 +420,56 @@ void mxs_set_lcdclk(uint32_t __maybe_unused lcd_base, uint32_t freq)
 #endif
 }
 
+/*
+ * Set GPMI clock frequency, in kHz
+ */
+uint32_t mxs_set_gpmiclk(uint32_t freq, int xtal)
+{
+	struct mxs_clkctrl_regs *clkctrl_regs =
+		(struct mxs_clkctrl_regs *)MXS_CLKCTRL_BASE;
+	uint32_t clk, clkreg;
+
+	clkreg = (uint32_t)(&clkctrl_regs->hw_clkctrl_gpmi);
+
+	if (xtal)
+		clk = XTAL_FREQ_KHZ;
+	else
+		clk = mxs_get_ref_gpmiclk();
+
+	if (freq > clk)
+		return 0;
+
+	clrbits_le32(clkreg, CLKCTRL_GPMI_CLKGATE);
+	while (readl(clkreg) & CLKCTRL_GPMI_CLKGATE)
+		;
+
+	/* Calculate the divider and cap it if necessary */
+	clk /= freq;
+	if (clk > CLKCTRL_GPMI_DIV_MASK)
+		clk = CLKCTRL_GPMI_DIV_MASK;
+
+	/* Set clock divider */
+	clrsetbits_le32(clkreg, CLKCTRL_GPMI_DIV_MASK, clk);
+	while (readl(clkreg) & CLKCTRL_GPMI_BUSY)
+		;
+
+	if (xtal)
+		writel(CLKCTRL_CLKSEQ_BYPASS_GPMI,
+			&clkctrl_regs->hw_clkctrl_clkseq_set);
+	else
+		writel(CLKCTRL_CLKSEQ_BYPASS_GPMI,
+			&clkctrl_regs->hw_clkctrl_clkseq_clr);
+
+	return mxs_get_gpmiclk();
+}
+
 uint32_t mxc_get_clock(enum mxc_clock clk)
 {
 	switch (clk) {
 	case MXC_ARM_CLK:
 		return mxs_get_pclk() * 1000000;
 	case MXC_GPMI_CLK:
-		return mxs_get_gpmiclk() * 1000000;
+		return mxs_get_gpmiclk() * 1000;
 	case MXC_AHB_CLK:
 	case MXC_IPG_CLK:
 		return mxs_get_hclk() * 1000000;

@@ -46,6 +46,7 @@ void mxs_set_ioclk(enum mxs_ioclock io, uint32_t freq);
 void mxs_set_sspclk(enum mxs_sspclock ssp, uint32_t freq, int xtal);
 void mxs_set_ssp_busclock(unsigned int bus, uint32_t freq);
 void mxs_set_lcdclk(uint32_t __maybe_unused lcd_base, uint32_t freq);
+uint32_t mxs_set_gpmiclk(uint32_t freq, int xtal);
 
 /* Compatibility with the FEC Ethernet driver */
 #define	imx_get_fecclk()	mxc_get_clock(MXC_AHB_CLK)
