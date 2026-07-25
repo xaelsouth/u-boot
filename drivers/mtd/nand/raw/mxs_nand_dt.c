@@ -25,6 +25,16 @@ struct mxs_nand_dt_data {
 	int max_chain_delay; /* See the async EDO mode */
 };
 
+static const struct mxs_nand_dt_data mxs_nand_imx23_data = {
+	.max_ecc_strength_supported = 20,
+	.max_chain_delay = 16000,
+};
+
+static const struct mxs_nand_dt_data mxs_nand_imx28_data = {
+	.max_ecc_strength_supported = 20,
+	.max_chain_delay = 16000,
+};
+
 static const struct mxs_nand_dt_data mxs_nand_imx6q_data = {
 	.max_ecc_strength_supported = 40,
 	.max_chain_delay = 12000,
@@ -46,6 +56,14 @@ static const struct mxs_nand_dt_data mxs_nand_imx8qxp_data = {
 };
 
 static const struct udevice_id mxs_nand_dt_ids[] = {
+	{
+		.compatible = "fsl,imx23-gpmi-nand",
+		.data = (unsigned long)&mxs_nand_imx23_data,
+	},
+	{
+		.compatible = "fsl,imx28-gpmi-nand",
+		.data = (unsigned long)&mxs_nand_imx28_data,
+	},
 	{
 		.compatible = "fsl,imx6q-gpmi-nand",
 		.data = (unsigned long)&mxs_nand_imx6q_data,
