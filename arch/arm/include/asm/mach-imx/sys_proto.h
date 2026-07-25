@@ -344,6 +344,7 @@ u32 get_periph_clk(void);
 
 void lcdif_power_down(void);
 
+int gpmi_mxs_reset_block(struct mxs_register_32 *reg, bool just_enable);
 int mxs_reset_block(struct mxs_register_32 *reg);
 int mxs_wait_mask_set(struct mxs_register_32 *reg, u32 mask, u32 timeout);
 int mxs_wait_mask_clr(struct mxs_register_32 *reg, u32 mask, u32 timeout);
