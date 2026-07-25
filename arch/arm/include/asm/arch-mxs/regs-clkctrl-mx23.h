@@ -81,7 +81,7 @@ struct mxs_clkctrl_regs {
 #define	CLKCTRL_CPU_DIV_CPU_MASK		0x3f
 #define	CLKCTRL_CPU_DIV_CPU_OFFSET		0
 
-#define	CLKCTRL_HBUS_BUSY			(1 << 29)
+#define	CLKCTRL_HBUS_ASM_BUSY			(1 << 29)
 #define	CLKCTRL_HBUS_DCP_AS_ENABLE		(1 << 28)
 #define	CLKCTRL_HBUS_PXP_AS_ENABLE		(1 << 27)
 #define	CLKCTRL_HBUS_APBHDMA_AS_ENABLE		(1 << 26)
