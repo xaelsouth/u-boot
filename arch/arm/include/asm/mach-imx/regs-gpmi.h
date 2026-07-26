@@ -161,7 +161,9 @@ struct mxs_gpmi_regs {
 #define	GPMI_STAT_FIFO_FULL				(1 << 1)
 #define	GPMI_STAT_PRESENT				(1 << 0)
 
-#define	GPMI_DEBUG_WAIT_FOR_READY_END_MASK		(0xff << 24)
+#define	GPMI_DEBUG_READY_MASK				(0xf << 28)
+#define	GPMI_DEBUG_READY_OFFSET				28
+#define	GPMI_DEBUG_WAIT_FOR_READY_END_MASK		(0xf << 24)
 #define	GPMI_DEBUG_WAIT_FOR_READY_END_OFFSET		24
 #define	GPMI_DEBUG_DMA_SENSE_MASK			(0xff << 16)
 #define	GPMI_DEBUG_DMA_SENSE_OFFSET			16

@@ -57,6 +57,15 @@
 
 struct nand_ecclayout fake_ecc_layout;
 
+static inline bool GPMI_IS_MXS(void)
+{
+#if defined(CONFIG_MX23) || defined(CONFIG_MX28)
+	return true;
+#else
+	return false;
+#endif
+}
+
 /*
  * Cache management functions
  */
@@ -433,8 +442,13 @@ static int mxs_nand_device_ready(struct mtd_info *mtd)
 	struct mxs_nand_info *nand_info = nand_get_controller_data(chip);
 	uint32_t tmp;
 
+#if defined(CONFIG_MX23)
+	tmp = readl(&nand_info->gpmi_regs->hw_gpmi_debug);
+	tmp >>= (GPMI_DEBUG_READY_OFFSET + nand_info->cur_chip);
+#else
 	tmp = readl(&nand_info->gpmi_regs->hw_gpmi_stat);
 	tmp >>= (GPMI_STAT_READY_BUSY_OFFSET + nand_info->cur_chip);
+#endif
 
 	return tmp & 1;
 }
@@ -1217,7 +1231,7 @@ int mxs_nand_setup_ecc(struct mtd_info *mtd)
 	mxs_nand_dump_geo(mtd);
 
 	/* Configure BCH and set NFC geometry */
-	mxs_reset_block(&bch_regs->hw_bch_ctrl_reg);
+	gpmi_mxs_reset_block(&bch_regs->hw_bch_ctrl_reg, GPMI_IS_MXS());
 
 	/* Configure layout 0 */
 	tmp = (geo->ecc_chunk_count - 1) << BCH_FLASHLAYOUT0_NBLOCKS_OFFSET;
@@ -1314,7 +1328,12 @@ static int mxs_nand_init_dma(struct mxs_nand_info *info)
 	/* Init the DMA controller. */
 	mxs_dma_init();
 	for (j = MXS_DMA_CHANNEL_AHB_APBH_GPMI0;
-		j <= MXS_DMA_CHANNEL_AHB_APBH_GPMI7; j++) {
+#if defined(CONFIG_MX23)
+		j <= MXS_DMA_CHANNEL_AHB_APBH_GPMI3;
+#else
+		j <= MXS_DMA_CHANNEL_AHB_APBH_GPMI7;
+#endif
+	j++) {
 		ret = mxs_dma_init_channel(j);
 		if (ret)
 			goto err3;
@@ -1322,7 +1341,7 @@ static int mxs_nand_init_dma(struct mxs_nand_info *info)
 
 	/* Reset the GPMI block. */
 	mxs_reset_block(&info->gpmi_regs->hw_gpmi_ctrl0_reg);
-	mxs_reset_block(&info->bch_regs->hw_bch_ctrl_reg);
+	gpmi_mxs_reset_block(&info->bch_regs->hw_bch_ctrl_reg, GPMI_IS_MXS());
 
 	/*
 	 * Choose NAND mode, set IRQ polarity, disable write protection and
