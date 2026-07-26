@@ -1075,7 +1075,12 @@ static int mxs_nand_ecc_read_oob(struct mtd_info *mtd, struct nand_chip *nand,
 		 */
 		memset(nand->oob_poi, 0xff, mtd->oobsize);
 
+#if defined(CONFIG_MX23)
+		nand->cmdfunc(mtd, NAND_CMD_READ0, 0, page);
+#else
 		nand->cmdfunc(mtd, NAND_CMD_READ0, mtd->writesize, page);
+#endif
+
 		mxs_nand_read_buf(mtd, nand->oob_poi, 1);
 	}
 
@@ -1107,7 +1112,12 @@ static int mxs_nand_ecc_write_oob(struct mtd_info *mtd, struct nand_chip *nand,
 	}
 
 	/* Write the block mark. */
+#if defined(CONFIG_MX23)
+	nand->cmdfunc(mtd, NAND_CMD_SEQIN, 0, page);
+#else
 	nand->cmdfunc(mtd, NAND_CMD_SEQIN, mtd->writesize, page);
+#endif
+
 	nand->write_buf(mtd, &block_mark, 1);
 	nand->cmdfunc(mtd, NAND_CMD_PAGEPROG, -1, -1);
 
