@@ -474,6 +474,7 @@ static void mxs_nand_select_chip(struct mtd_info *mtd, int chip)
 static void mxs_nand_swap_block_mark(struct bch_geometry *geo,
 				     uint8_t *data_buf, uint8_t *oob_buf)
 {
+#if !defined(CONFIG_MX23)
 	uint32_t bit_offset = geo->block_mark_bit_offset;
 	uint32_t buf_offset = geo->block_mark_byte_offset;
 
@@ -498,6 +499,7 @@ static void mxs_nand_swap_block_mark(struct bch_geometry *geo,
 
 	data_buf[buf_offset] |= dst << bit_offset;
 	data_buf[buf_offset + 1] |= dst >> (8 - bit_offset);
+#endif
 }
 
 /*
