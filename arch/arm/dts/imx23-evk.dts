@@ -32,6 +32,23 @@
 		enable-active-high;
 	};
 
+	/* i.MX23 hardware I2C has no U-Boot driver, use bit-banging on the same pads */
+	i2c0: i2c-gpio {
+		compatible = "i2c-gpio";
+		sda-gpios = <&gpio0 31 0>;
+		scl-gpios = <&gpio0 30 0>;
+		i2c-gpio,delay-us = <5>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		eeprom@50 {
+			compatible = "atmel,24c128";
+			reg = <0x50>;
+			pagesize = <64>;
+			size = <16384>;
+		};
+	};
+
 	reg_lcd_5v: regulator-lcd-5v {
 		compatible = "regulator-fixed";
 		regulator-name = "lcd-5v";

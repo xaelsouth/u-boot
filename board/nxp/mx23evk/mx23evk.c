@@ -42,6 +42,11 @@ static const iomux_cfg_t iomux_setup[] = {
 		(MXS_PAD_8MA | MXS_PAD_3V3 | MXS_PAD_NOPULL),
 	MX23_PAD_SSP1_SCK__SSP1_SCK |
 		(MXS_PAD_8MA | MXS_PAD_3V3 | MXS_PAD_NOPULL),
+	/* I2C bus (bit-banged) */
+	MX23_PAD_I2C_SCL__GPIO_0_30 |
+		(MXS_PAD_8MA | MXS_PAD_3V3 | MXS_PAD_PULLUP),
+	MX23_PAD_I2C_SDA__GPIO_0_31 |
+		(MXS_PAD_8MA | MXS_PAD_3V3 | MXS_PAD_PULLUP),
 	/* Write Protect Pin */
 	MX23_PAD_PWM4__GPIO_1_30 |
 		(MXS_PAD_4MA | MXS_PAD_3V3 | MXS_PAD_NOPULL),
