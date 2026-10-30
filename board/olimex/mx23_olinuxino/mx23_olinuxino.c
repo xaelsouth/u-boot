@@ -35,8 +35,9 @@ int board_early_init_f(void)
 int board_ehci_hcd_init(int port)
 {
 	/* Enable LAN9512 (Maxi) or GL850G (Mini) USB HUB power. */
+	mxs_iomux_setup_pad(MX23_PAD_GPMI_ALE__GPIO_0_17);
 	gpio_direction_output(MX23_PAD_GPMI_ALE__GPIO_0_17, 1);
-	udelay(100);
+	udelay(1000);
 	return 0;
 }
 
