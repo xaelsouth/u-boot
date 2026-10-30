@@ -10,7 +10,12 @@
 #include <asm/arch/imx-regs.h>
 #include <errno.h>
 #include <linux/delay.h>
+#include <command.h>
 #include <dm.h>
+#include <dm/lists.h>
+#include <env.h>
+#include <net-common.h>
+#include <linux/usb/gadget.h>
 #include <power/regulator.h>
 
 #include "ehci.h"
@@ -274,6 +279,48 @@ static int ehci_usb_remove(struct udevice *dev)
 	return __ehci_hcd_stop(port);
 }
 
+#if CONFIG_IS_ENABLED(USB_ETHER)
+/*
+ * The ChipIdea UDC driver is not a DM gadget driver, but the DM_ETH based
+ * USB Ethernet gadget needs a UCLASS_USB_GADGET_GENERIC parent. It is a
+ * sibling of the controller because the controller is removed and probed
+ * again in device mode when the gadget registers.
+ */
+static const struct usb_gadget_generic_ops mxs_udc_ops = {};
+
+U_BOOT_DRIVER(mxs_udc) = {
+	.name	= "mxs_udc",
+	.id	= UCLASS_USB_GADGET_GENERIC,
+	.ops	= &mxs_udc_ops,
+};
+
+static int ehci_usb_bind(struct udevice *dev)
+{
+	if (dev_read_addr(dev) != MXS_USBCTRL0_BASE)
+		return 0;
+
+	return device_bind_driver(dev->parent, "mxs_udc", "mxs_udc", NULL);
+}
+
+static int do_usbnet(struct cmd_tbl *cmdtp, int flag, int argc,
+		     char *const argv[])
+{
+	int ret = usb_ether_init();
+
+	if (ret)
+		return CMD_RET_FAILURE;
+
+	env_set("ethact", "usb_ether");
+	return CMD_RET_SUCCESS;
+}
+
+U_BOOT_CMD(usbnet, 1, 0, do_usbnet,
+	   "bind the USB Ethernet gadget and make it the active interface",
+	   "\n    - then use 'ping' or 'dhcp'; this takes over the USB controller");
+#else
+#define ehci_usb_bind NULL
+#endif
+
 static const struct udevice_id mxs_usb_ids[] = {
 	{ .compatible = "fsl,imx23-usb" },
 	{ .compatible = "fsl,imx28-usb" },
@@ -284,6 +331,7 @@ U_BOOT_DRIVER(usb_mxs) = {
 	.name	= "ehci_mxs",
 	.id	= UCLASS_USB,
 	.of_match = mxs_usb_ids,
+	.bind	= ehci_usb_bind,
 	.of_to_plat = ehci_usb_ofdata_to_platdata,
 	.probe	= ehci_usb_probe,
 	.remove = ehci_usb_remove,
