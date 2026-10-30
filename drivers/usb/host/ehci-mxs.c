@@ -56,11 +56,25 @@ static int ehci_mxs_toggle_clock(const struct ehci_mxs_port *port, int enable)
 	return 0;
 }
 
+__weak int board_ehci_hcd_init(int port)
+{
+	return 0;
+}
+
+__weak int board_ehci_hcd_exit(int port)
+{
+	return 0;
+}
+
 static int __ehci_hcd_init(struct ehci_mxs_port *port, enum usb_init_type init,
 			   struct ehci_hccr **hccr, struct ehci_hcor **hcor)
 {
 	u32 usb_base, cap_base;
 	int ret;
+
+	ret = board_ehci_hcd_init(0);
+	if (ret)
+		return ret;
 
 	/* Reset the PHY block */
 	writel(USBPHY_CTRL_SFTRST, &port->phy_regs->hw_usbphy_ctrl_set);
@@ -94,6 +108,7 @@ static int __ehci_hcd_stop(struct ehci_mxs_port *port)
 	u32 usb_base, cap_base, tmp;
 	struct ehci_hccr *hccr;
 	struct ehci_hcor *hcor;
+	int ret;
 
 	/* Stop the USB port */
 	usb_base = port->usb_regs + 0x100;
@@ -113,7 +128,10 @@ static int __ehci_hcd_stop(struct ehci_mxs_port *port)
 	writel(tmp, &port->phy_regs->hw_usbphy_pwd);
 
 	/* Disable USB clock */
-	return ehci_mxs_toggle_clock(port, 0);
+	ret = ehci_mxs_toggle_clock(port, 0);
+	board_ehci_hcd_exit(0);
+
+	return ret;
 }
 
 struct ehci_mxs_priv_data {
