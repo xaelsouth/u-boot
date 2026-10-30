@@ -11,6 +11,12 @@ config DM_ETH
 	  This is currently implemented in net/eth-uclass.c
 	  Look in include/net.h for details.
 
+config ENC28J60
+	bool "Microchip ENC28J60 SPI Ethernet controller"
+	depends on DM_ETH && DM_SPI
+	help
+	  Enable support for the Microchip ENC28J60 SPI Ethernet controller.
+
 config SPL_DM_ETH
 	depends on SPL_NET
 	def_bool y

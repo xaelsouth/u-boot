@@ -3,6 +3,7 @@
 // Copyright 2012 Freescale Semiconductor, Inc.
 
 /dts-v1/;
+#include <dt-bindings/interrupt-controller/irq.h>
 #include "imx23.dtsi"
 
 / {
@@ -61,12 +62,24 @@
 
 			ssp0: spi@80010000 {
 				compatible = "fsl,imx23-mmc";
-				pinctrl-names = "default";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				pinctrl-names = "default", "enc28j60";
 				pinctrl-0 = <&mmc0_4bit_pins_a &mmc0_pins_fixup>;
+				pinctrl-1 = <&enc28j60_spi_pins &enc28j60_irq_pins>;
 				bus-width = <4>;
 				wp-gpios = <&gpio1 30 0>;
 				vmmc-supply = <&reg_vddio_sd0>;
 				status = "okay";
+
+				enc28j60: ethernet@0 {
+					compatible = "microchip,enc28j60";
+					reg = <0>;
+					interrupt-parent = <&gpio2>;
+					interrupts = <3 IRQ_TYPE_EDGE_FALLING>;
+					spi-max-frequency = <6000000>;
+					status = "okay";
+				};
 			};
 
 			pinctrl@80018000 {
@@ -83,6 +96,30 @@
 					fsl,drive-strength = <MXS_DRIVE_4mA>;
 					fsl,voltage = <MXS_VOLTAGE_HIGH>;
 					fsl,pull-up = <MXS_PULL_DISABLE>;
+				};
+
+				enc28j60_spi_pins: enc28j60-spi@0 {
+					reg = <0>;
+					fsl,pinmux-ids = <
+						MX23_PAD_SSP1_DATA0__SSP1_DATA0
+						MX23_PAD_SSP1_DATA3__SSP1_DATA3
+						MX23_PAD_SSP1_CMD__SSP1_CMD
+						MX23_PAD_SSP1_SCK__SSP1_SCK
+					>;
+					fsl,drive-strength = <MXS_DRIVE_8mA>;
+					fsl,voltage = <MXS_VOLTAGE_HIGH>;
+					fsl,pull-up = <MXS_PULL_ENABLE>;
+				};
+
+				enc28j60_irq_pins: enc28j60-irq@0 {
+					reg = <0>;
+					fsl,pinmux-ids = <
+						MX23_PAD_SSP1_DATA1__GPIO_2_3
+						MX23_PAD_SSP1_DATA2__GPIO_2_4
+					>;
+					fsl,drive-strength = <MXS_DRIVE_4mA>;
+					fsl,voltage = <MXS_VOLTAGE_HIGH>;
+					fsl,pull-up = <MXS_PULL_ENABLE>;
 				};
 			};
 

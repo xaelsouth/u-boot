@@ -18,11 +18,13 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/iomux-mx23.h>
 #include <asm/arch/sys_proto.h>
+#include <linux/libfdt.h>
 
 #define	MUX_CONFIG_SSP1	(MXS_PAD_8MA | MXS_PAD_PULLUP)
 #define	MUX_CONFIG_LCD	(MXS_PAD_4MA | MXS_PAD_NOPULL)
 #define	MUX_CONFIG_GPMI_NAND		(MXS_PAD_3V3 | MXS_PAD_4MA | MXS_PAD_NOPULL)
 #define	MUX_CONFIG_GPMI_NAND_FIXUP	(MXS_PAD_3V3 | MXS_PAD_12MA | MXS_PAD_NOPULL)
+#define MUX_CONFIG_ENC28J60_INT		(MXS_PAD_3V3 | MXS_PAD_4MA | MXS_PAD_PULLUP)
 
 /* Except for EMI pins below is the copy of iomux_setup from mx23evk/spl_boot.c. */
 static const iomux_cfg_t iomux_setup[] = {
@@ -113,6 +115,64 @@ static const iomux_cfg_t iomux_setup[] = {
 
 DECLARE_GLOBAL_DATA_PTR;
 
+static bool mx23evk_use_enc28j60(void)
+{
+	uint8_t mode = MXS_SPL_DATA->boot_mode_idx;
+	uint8_t pads;
+
+	if (mode >= ARRAY_SIZE(mxs_boot_modes))
+		return false;
+
+	pads = mxs_boot_modes[mode].boot_pads;
+	return pads == MXS_BM_USB || pads == MXS_BM_NAND_3V3 ||
+	       pads == MXS_BM_NAND_1V8;
+}
+
+int board_fdt_blob_setup(void **fdtp)
+{
+	void *fdt;
+	fdt32_t pinctrl[2];
+	int ssp, enc, spi_pins, irq_pins, ret;
+
+	if (!fdtp || !*fdtp)
+		return -EINVAL;
+	fdt = *fdtp;
+	ssp = fdt_path_offset(fdt, "/apb@80000000/apbh@80000000/spi@80010000");
+	if (ssp < 0)
+		return ssp;
+
+	enc = fdt_subnode_offset(fdt, ssp, "ethernet@0");
+	if (enc < 0)
+		return enc;
+
+	if (!mx23evk_use_enc28j60())
+		return fdt_setprop_inplace(fdt, enc, "status", "nope",
+					   sizeof("nope"));
+
+	spi_pins = fdt_path_offset(fdt,
+		"/apb@80000000/apbh@80000000/pinctrl@80018000/enc28j60-spi@0");
+	irq_pins = fdt_path_offset(fdt,
+		"/apb@80000000/apbh@80000000/pinctrl@80018000/enc28j60-irq@0");
+	if (spi_pins < 0 || irq_pins < 0)
+		return -FDT_ERR_NOTFOUND;
+
+	if (!fdt_get_phandle(fdt, spi_pins) ||
+	    !fdt_get_phandle(fdt, irq_pins))
+		return -FDT_ERR_NOTFOUND;
+	pinctrl[0] = cpu_to_fdt32(fdt_get_phandle(fdt, spi_pins));
+	pinctrl[1] = cpu_to_fdt32(fdt_get_phandle(fdt, irq_pins));
+	ret = fdt_setprop_inplace(fdt, ssp, "compatible", "fsl,imx23-spi",
+				  sizeof("fsl,imx23-spi"));
+	if (ret)
+		return ret;
+	ret = fdt_setprop_inplace(fdt, ssp, "pinctrl-0", pinctrl,
+				  sizeof(pinctrl));
+	if (ret)
+		return ret;
+
+	return fdt_setprop_inplace(fdt, enc, "status", "okay", sizeof("okay"));
+}
+
 /*
  * Functions
  */
@@ -144,10 +204,22 @@ int dram_init(void)
 
 int board_init(void)
 {
+	static const iomux_cfg_t enc28j60_iomux[] = {
+		MX23_PAD_SSP1_DATA0__SSP1_DATA0 | MUX_CONFIG_SSP1,
+		MX23_PAD_SSP1_DATA3__SSP1_DATA3 | MUX_CONFIG_SSP1,
+		MX23_PAD_SSP1_CMD__SSP1_CMD | MUX_CONFIG_SSP1,
+		MX23_PAD_SSP1_SCK__SSP1_SCK | MUX_CONFIG_SSP1,
+		MX23_PAD_SSP1_DATA1__GPIO_2_3 | MUX_CONFIG_ENC28J60_INT,
+		MX23_PAD_SSP1_DATA2__GPIO_2_4 | MUX_CONFIG_ENC28J60_INT,
+	};
+
 	/* Adress of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM_1 + 0x100;
 
 	mxs_iomux_setup_multiple_pads(iomux_setup, ARRAY_SIZE(iomux_setup));
+	if (mx23evk_use_enc28j60())
+		mxs_iomux_setup_multiple_pads(enc28j60_iomux,
+					      ARRAY_SIZE(enc28j60_iomux));
 
 	return 0;
 }
