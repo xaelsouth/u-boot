@@ -75,6 +75,18 @@
 #define ENC28J60_MACON3_FRMLNEN	BIT(1)
 #define ENC28J60_MACON3_FULDPX	BIT(0)
 #define ENC28J60_PHCON1_PDPXMD	BIT(8)
+
+#ifdef CONFIG_ENC28J60_FULL_DUPLEX
+#define ENC28J60_DUPLEX_MACON3	ENC28J60_MACON3_FULDPX
+#define ENC28J60_DUPLEX_MACON4	0
+#define ENC28J60_DUPLEX_MABBIPG	0x15
+#define ENC28J60_DUPLEX_PHCON1	ENC28J60_PHCON1_PDPXMD
+#else
+#define ENC28J60_DUPLEX_MACON3	0
+#define ENC28J60_DUPLEX_MACON4	BIT(6)	/* DEFER */
+#define ENC28J60_DUPLEX_MABBIPG	0x12
+#define ENC28J60_DUPLEX_PHCON1	0
+#endif
 #define ENC28J60_ERXFCON_UCEN	BIT(7)
 #define ENC28J60_ERXFCON_CRCEN	BIT(5)
 #define ENC28J60_ERXFCON_BCEN	BIT(0)
@@ -397,16 +409,18 @@ static int enc28j60_hw_init(struct udevice *dev, struct enc28j60_priv *priv)
 				 ENC28J60_MACON3_PADCFG0 |
 				 ENC28J60_MACON3_TXCRCEN |
 				 ENC28J60_MACON3_FRMLNEN |
-				 ENC28J60_MACON3_FULDPX);
+				 ENC28J60_DUPLEX_MACON3);
 	if (ret)
 		return ret;
-	ret = enc28j60_write_reg(dev, priv, ENC28J60_MACON4, 0);
+	ret = enc28j60_write_reg(dev, priv, ENC28J60_MACON4,
+				 ENC28J60_DUPLEX_MACON4);
 	if (ret)
 		return ret;
 	ret = enc28j60_write_reg(dev, priv, ENC28J60_MAIPGL, 0x12);
 	if (ret)
 		return ret;
-	ret = enc28j60_write_reg(dev, priv, ENC28J60_MABBIPG, 0x15);
+	ret = enc28j60_write_reg(dev, priv, ENC28J60_MABBIPG,
+				 ENC28J60_DUPLEX_MABBIPG);
 	if (ret)
 		return ret;
 	ret = enc28j60_write_word(dev, priv, ENC28J60_MAMXFLL,
@@ -425,7 +439,7 @@ static int enc28j60_hw_init(struct udevice *dev, struct enc28j60_priv *priv)
 	if (ret)
 		return ret;
 	ret = enc28j60_phy_write(dev, priv, ENC28J60_PHCON1,
-				 ENC28J60_PHCON1_PDPXMD);
+				 ENC28J60_DUPLEX_PHCON1);
 	if (ret)
 		return ret;
 	ret = enc28j60_phy_write(dev, priv, ENC28J60_PHCON2, 0x0100);
