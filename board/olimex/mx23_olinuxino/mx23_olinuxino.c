@@ -6,6 +6,7 @@
  */
 
 #include <init.h>
+#include <dm.h>
 #include <asm/global_data.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
@@ -56,8 +57,35 @@ int dram_init(void)
 
 int board_init(void)
 {
+	int  ret = 0;
+
 	/* Adress of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM_1 + 0x100;
 
-	return 0;
+	if (IS_ENABLED(CONFIG_ENCX24J600)) {
+		static const iomux_cfg_t uext_spi_pads[] = {
+			MX23_PAD_GPMI_WRN__SSP2_SCK | MXS_PAD_8MA | MXS_PAD_PULLUP,
+			MX23_PAD_GPMI_RDY1__SSP2_CMD | MXS_PAD_8MA | MXS_PAD_PULLUP,
+			MX23_PAD_GPMI_D00__SSP2_DATA0 | MXS_PAD_8MA | MXS_PAD_PULLUP,
+			MX23_PAD_GPMI_D03__SSP2_DATA3 | MXS_PAD_8MA | MXS_PAD_PULLUP,
+		};
+
+		struct gpio_desc irq;
+
+		mxs_iomux_setup_multiple_pads(uext_spi_pads,
+					      ARRAY_SIZE(uext_spi_pads));
+		ret = gpio_request_by_name_nodev(ofnode_path("/"),
+						 "u-boot,enc-int-gpios", 0,
+						 &irq, GPIOD_IS_IN);
+		if (ret)
+			printf("ENC624J600 interrupt pin setup failed: %d\n", ret);
+		else {
+			mxs_iomux_setup_pad(MX23_PAD_LCD_ENABLE__GPIO_1_23 |
+					    MXS_PAD_4MA | MXS_PAD_PULLUP);
+			/* Return 0 anyway. */
+			ret = 0;
+		}
+	}
+
+	return ret;
 }

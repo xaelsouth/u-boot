@@ -18,3 +18,21 @@
 &ssp0 {
 	non-removable;
 };
+
+#ifdef CONFIG_ENCX24J600
+/ {
+	u-boot,enc-int-gpios = <&gpio1 23 0>;
+};
+
+&ssp1 {
+	ethernet@0 {
+		compatible = "microchip,encx24j600";
+		reg = <0>;
+		spi-max-frequency = <14000000>;
+	};
+};
+
+&i2c {
+	status = "disabled";
+};
+#endif

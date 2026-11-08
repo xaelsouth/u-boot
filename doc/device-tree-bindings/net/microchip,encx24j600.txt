@@ -17,3 +17,9 @@ Example:
 		reg = <0>;
 		spi-max-frequency = <14000000>;
 	};
+
+On the i.MX23 Olinuxino, CONFIG_ENCX24J600 enables the MOD-ENC624J600
+on the UEXT SPI bus. The UEXT interrupt shares the I2C SCL pin; U-Boot
+disables that I2C bus and configures the interrupt pin as a GPIO input.
+SSP0 remains available for the SD card. The default board configuration
+does not enable the optional controller.
