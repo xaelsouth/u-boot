@@ -33,6 +33,7 @@ obj-$(CONFIG_DWC_ETH_XGMAC_SOCFPGA) += dwc_eth_xgmac_socfpga.o
 obj-$(CONFIG_E1000) += e1000.o
 obj-$(CONFIG_E1000_SPI) += e1000_spi.o
 obj-$(CONFIG_ENC28J60) += enc28j60.o
+obj-$(CONFIG_ENCX24J600) += encx24j600.o
 obj-$(CONFIG_EEPRO100) += eepro100.o
 obj-$(CONFIG_ESSEDMA) += essedma.o
 obj-$(CONFIG_ETHOC) += ethoc.o

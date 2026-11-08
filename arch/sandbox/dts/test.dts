@@ -1705,7 +1705,21 @@
 			address-width = <16>;
 			sandbox,emul = <&spi_eeprom_emul>;
 		};
+#ifdef CONFIG_ENCX24J600
+		ethernet@2 {
+			compatible = "microchip,encx24j600";
+			reg = <2>;
+			spi-max-frequency = <14000000>;
+			sandbox,emul = <&encx24j600_emul>;
+		};
+#endif
 	};
+
+#ifdef CONFIG_ENCX24J600
+	encx24j600_emul: encx24j600-emul {
+		compatible = "sandbox,encx24j600";
+	};
+#endif
 
 	spi_eeprom_emul: spi-eeprom-emul {
 		compatible = "sandbox,spi-eeprom";

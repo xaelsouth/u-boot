@@ -36,8 +36,7 @@
 
 #define MXSSSP_SMALL_TRANSFER	512
 
-/* Base numbers of i.MX2[38] clk for ssp0 IP block */
-#define MXS_SSP_IMX23_CLKID_SSP0 33
+/* Base number of i.MX28 clk for ssp0 IP block */
 #define MXS_SSP_IMX28_CLKID_SSP0 46
 
 struct mxs_spi_plat {
@@ -396,7 +395,14 @@ static int mxs_spi_set_speed(struct udevice *bus, uint speed)
 #ifdef CONFIG_MX28
 	int clkid = priv->clk_id - MXS_SSP_IMX28_CLKID_SSP0;
 #else /* CONFIG_MX23 */
-	int clkid = priv->clk_id - MXS_SSP_IMX23_CLKID_SSP0;
+	int clkid;
+
+	if (priv->regs == (struct mxs_ssp_regs *)MXS_SSP0_BASE)
+		clkid = 0;
+	else if (priv->regs == (struct mxs_ssp_regs *)MXS_SSP1_BASE)
+		clkid = 1;
+	else
+		return -EINVAL;
 #endif
 	if (speed > priv->max_freq)
 		speed = priv->max_freq;

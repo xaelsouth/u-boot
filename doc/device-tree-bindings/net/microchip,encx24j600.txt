@@ -1,0 +1,19 @@
+Microchip ENC624J600 SPI Ethernet controller
+============================================
+
+Required properties:
+- compatible: "microchip,encx24j600"
+- reg: SPI chip select
+- spi-max-frequency: SPI clock frequency, in Hz
+
+The U-Boot driver polls the controller and does not use its interrupt.
+Standard Ethernet MAC address properties may be supplied. Otherwise U-Boot
+uses the address read from the controller or an address from its environment.
+
+Example:
+
+	ethernet@0 {
+		compatible = "microchip,encx24j600";
+		reg = <0>;
+		spi-max-frequency = <14000000>;
+	};

@@ -25,6 +25,12 @@ config ENC28J60_FULL_DUPLEX
 	  The ENC28J60 cannot auto-negotiate, so the duplex mode is fixed.
 	  It must match the link partner. Say N for half duplex.
 
+config ENCX24J600
+	bool "Microchip ENCX24J600 SPI Ethernet controller"
+	depends on DM_ETH && DM_SPI
+	help
+	  Enable support for the Microchip ENC624J600 SPI Ethernet controller.
+
 config SPL_DM_ETH
 	depends on SPL_NET
 	def_bool y
