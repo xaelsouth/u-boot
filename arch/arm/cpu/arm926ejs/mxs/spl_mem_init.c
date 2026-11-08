@@ -229,6 +229,9 @@ static void mxs_mem_setup_vdda(void)
 
 uint32_t mxs_mem_get_size(void)
 {
+#if defined(CONFIG_MX23)
+	return PHYS_SDRAM_1_SIZE;
+#else
 	uint32_t sz, da;
 	uint32_t *vt = (uint32_t *)0x20;
 	/* The following is "subs pc, r14, #4", used as return from DABT. */
@@ -244,6 +247,7 @@ uint32_t mxs_mem_get_size(void)
 	vt[4] = da;
 
 	return sz;
+#endif
 }
 
 #ifdef CONFIG_MX23

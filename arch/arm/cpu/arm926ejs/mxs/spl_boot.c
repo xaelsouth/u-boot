@@ -97,6 +97,7 @@ static noinline
 __attribute__((target("arm")))
 void mxs_spl_fixup_vectors(void)
 {
+#if !defined(CONFIG_MX23)
 	/*
 	 * Copy our vector table to 0x0, since due to HAB, we cannot
 	 * be loaded to 0x0. We want to have working vectoring though,
@@ -109,6 +110,7 @@ void mxs_spl_fixup_vectors(void)
 
 	/* Make sure ARM core points to low vectors */
 	set_cr(get_cr() & ~CR_V);
+#endif
 }
 
 static void mxs_spl_console_init(void)

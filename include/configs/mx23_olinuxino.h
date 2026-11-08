@@ -9,7 +9,7 @@
 
 /* Memory configuration */
 #define PHYS_SDRAM_1			0x40000000	/* Base address */
-#define PHYS_SDRAM_1_SIZE		0x08000000	/* Max 128 MB RAM */
+#define PHYS_SDRAM_1_SIZE		0x04000000	/* Max 64 MB RAM */
 #define CFG_SYS_SDRAM_BASE		PHYS_SDRAM_1
 
 /* Status LED */
