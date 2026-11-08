@@ -11,6 +11,20 @@ config DM_ETH
 	  This is currently implemented in net/eth-uclass.c
 	  Look in include/net.h for details.
 
+config ENC28J60
+	bool "Microchip ENC28J60 SPI Ethernet controller"
+	depends on DM_ETH && DM_SPI
+	help
+	  Enable support for the Microchip ENC28J60 SPI Ethernet controller.
+
+config ENC28J60_FULL_DUPLEX
+	bool "Use full duplex (otherwise half duplex)"
+	depends on ENC28J60
+	default y
+	help
+	  The ENC28J60 cannot auto-negotiate, so the duplex mode is fixed.
+	  It must match the link partner. Say N for half duplex.
+
 config SPL_DM_ETH
 	depends on SPL_NET
 	def_bool y
