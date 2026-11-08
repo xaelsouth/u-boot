@@ -949,11 +949,11 @@ source "drivers/video/tegra/Kconfig"
 source "drivers/video/imx/Kconfig"
 
 config VIDEO_MXS
-	bool "Enable video support on i.MX28/i.MX6UL/i.MX7 SoCs"
+	bool "Enable video support on i.MX23/i.MX28/i.MX6UL/i.MX7 SoCs"
 	depends on MACH_IMX
 	imply VIDEO_DAMAGE
 	help
-	  Enable framebuffer driver for i.MX28/i.MX6UL/i.MX7 processors
+	  Enable framebuffer driver for i.MX23/i.MX28/i.MX6UL/i.MX7 processors
 
 config VIDEO_NX
 	bool "Enable video support on Nexell SoC"

@@ -29,6 +29,7 @@ NXP Semiconductors
    imxrt1170-evk
    layerscape
    ls1046ardb
+   mx23evk
    mx6sabreauto
    mx6sabresd
    mx6ul_14x14_evk

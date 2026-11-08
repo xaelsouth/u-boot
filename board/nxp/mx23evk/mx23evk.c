@@ -18,7 +18,9 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/iomux-mx23.h>
 #include <asm/arch/sys_proto.h>
+#include <dm.h>
 #include <linux/libfdt.h>
+#include <power/regulator.h>
 
 #define	MUX_CONFIG_SSP1	(MXS_PAD_8MA | MXS_PAD_PULLUP)
 #define	MUX_CONFIG_LCD	(MXS_PAD_4MA | MXS_PAD_NOPULL)
@@ -189,12 +191,6 @@ int board_early_init_f(void)
 	/* SSP0 clock at 96MHz */
 	mxs_set_sspclk(MXC_SSPCLK0, 96000, 0);
 
-	/* Power on LCD */
-	gpio_direction_output(MX23_PAD_LCD_RESET__GPIO_1_18, 1);
-
-	/* Set contrast to maximum */
-	gpio_direction_output(MX23_PAD_PWM2__GPIO_1_28, 1);
-
 #ifdef CONFIG_NAND_MXS
 	mxs_set_gpmiclk(22000, 1);
 #endif
@@ -209,6 +205,9 @@ int dram_init(void)
 
 int board_init(void)
 {
+	struct gpio_desc backlight;
+	struct udevice *regulator;
+	int ret;
 	static const iomux_cfg_t enc28j60_iomux[] = {
 		MX23_PAD_SSP1_DATA0__SSP1_DATA0 | MUX_CONFIG_SSP1,
 		MX23_PAD_SSP1_DATA3__SSP1_DATA3 | MUX_CONFIG_SSP1,
@@ -225,6 +224,36 @@ int board_init(void)
 	if (mx23evk_use_enc28j60())
 		mxs_iomux_setup_multiple_pads(enc28j60_iomux,
 					      ARRAY_SIZE(enc28j60_iomux));
+
+	ret = regulator_get_by_platname("lcd-3v3", &regulator);
+	if (!ret)
+		ret = regulator_set_enable_if_allowed(regulator, true);
+	if (ret) {
+		printf("LCD power enable failed: %d\n", ret);
+		return 0;
+	}
+
+	ret = gpio_request_by_name_nodev(ofnode_path("/"),
+					 "u-boot,lcd-backlight-gpios", 0,
+					 &backlight,
+					 GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+	if (ret)
+		printf("LCD backlight enable failed: %d\n", ret);
+
+	return 0;
+}
+
+int board_late_init(void)
+{
+	struct udevice *dev;
+	int ret;
+
+	if (!IS_ENABLED(CONFIG_VIDEO))
+		return 0;
+
+	ret = uclass_first_device_err(UCLASS_VIDEO, &dev);
+	if (ret)
+		printf("LCD initialization failed: %d\n", ret);
 
 	return 0;
 }

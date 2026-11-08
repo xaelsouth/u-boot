@@ -2,3 +2,41 @@
 
 #include "imx23-u-boot.dtsi"
 
+/ {
+	u-boot,lcd-backlight-gpios = <&gpio1 28 0>;
+};
+
+&{/apb@80000000} {
+	bootph-all;
+};
+
+&{/apb@80000000/apbh@80000000} {
+	bootph-all;
+};
+
+&{/apb@80000000/apbh@80000000/lcdif@80030000} {
+	bootph-all;
+	display = <&uboot_display>;
+
+	uboot_display: display-config {
+		bits-per-pixel = <24>;
+
+		display-timings {
+			timing {
+				clock-frequency = <9000000>;
+				hactive = <480>;
+				hback-porch = <2>;
+				hfront-porch = <2>;
+				hsync-len = <41>;
+				vactive = <272>;
+				vback-porch = <2>;
+				vfront-porch = <2>;
+				vsync-len = <10>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+		};
+	};
+};
