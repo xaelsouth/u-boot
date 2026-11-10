@@ -193,8 +193,13 @@ int print_cpuinfo(void)
 }
 #endif
 
+#if defined(CONFIG_MX23)
+int do_mx23_showclocks(struct cmd_tbl *cmdtp, int flag, int argc,
+		       char *const argv[])
+#else
 int do_mx28_showclocks(struct cmd_tbl *cmdtp, int flag, int argc,
 		       char *const argv[])
+#endif
 {
 	printf("CPU:   %3d MHz\n", mxc_get_clock(MXC_ARM_CLK) / 1000000);
 	printf("BUS:   %3d MHz\n", mxc_get_clock(MXC_AHB_CLK) / 1000000);
@@ -291,8 +296,16 @@ int mxs_dram_init(void)
 	return 0;
 }
 
+#if defined(CONFIG_MX23)
+#define do_mxs_showclocks do_mx23_showclocks
+#else
+#define do_mxs_showclocks do_mx28_showclocks
+#endif
+
 U_BOOT_CMD(
-	clocks,	CONFIG_SYS_MAXARGS, 1, do_mx28_showclocks,
+	clocks,	CONFIG_SYS_MAXARGS, 1, do_mxs_showclocks,
 	"display clocks",
 	""
 );
+
+#undef do_mxs_showclocks
